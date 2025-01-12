@@ -10,9 +10,19 @@ import * as path from 'path'
 
 let mainWindow: BrowserWindow | null = null
 
+function getLogPath(): string {
+  if (is.dev) {
+    // Development modunda proje dizininde oluştur
+    return path.join(process.cwd(), 'logs')
+  } else {
+    // Production modunda executable'ın bulunduğu dizinde oluştur
+    return path.join(path.dirname(process.execPath), 'logs')
+  }
+}
+
 async function logStartupError(error: Error): Promise<void> {
   try {
-    const logDir = path.join(process.cwd(), 'logs')
+    const logDir = getLogPath()
     await fs.mkdir(logDir, { recursive: true })
 
     const logFile = path.join(logDir, 'startup-error.log')
@@ -113,6 +123,10 @@ app.whenReady().then(async () => {
   try {
     // Set app user model id for windows
     electronApp.setAppUserModelId('com.electron')
+
+    // Log dizinini ayarla
+    const logPath = getLogPath()
+    app.setAppLogsPath(logPath)
 
     // Default open or close DevTools by F12 in development
     // and ignore CommandOrControl + R in production.

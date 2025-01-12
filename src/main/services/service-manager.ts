@@ -8,7 +8,6 @@ import { birlikService } from './birlik-service'
 import { ErrorService } from './error-service'
 import { BrowserWindow } from 'electron'
 import { mesajEvrakService } from './mesaj-evrak-service'
-import { sayacService } from './sayac-service'
 
 export class ServiceManager {
   private static instance: ServiceManager | null = null
@@ -21,8 +20,7 @@ export class ServiceManager {
     'gizlilikDerecesi', // Önce referans tabloları
     'kategori',
     'klasor',
-    'birlik',
-    'sayac', // Sonra sayaç servisi
+    'birlik', // Sonra sayaç servisi
     'mesajEvrak' // En son mesaj_evrak tablosu
   ]
 
@@ -31,8 +29,7 @@ export class ServiceManager {
     gizlilikDerecesi: gizlilikDerecesiService,
     kategori: kategoriService,
     birlik: birlikService,
-    mesajEvrak: mesajEvrakService,
-    sayac: sayacService
+    mesajEvrak: mesajEvrakService
   }
 
   private constructor() {

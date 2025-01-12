@@ -369,4 +369,51 @@ export const mesajEvrakSchema = `
   JOIN gizlilik_dereceleri gd ON gd.id = me.belge_gizlilik_id
   JOIN kategoriler k ON k.id = me.belge_kategori_id
   JOIN klasorler kl ON kl.id = me.belge_klasor_id;
+
+  -- Otomatik numara verme trigger'ı
+  CREATE TRIGGER IF NOT EXISTS trg_mesaj_evrak_numara_ver
+  AFTER INSERT ON mesaj_evrak
+  FOR EACH ROW
+  WHEN NEW.belge_kayit_no IS NULL AND NEW.belge_gün_sira_no IS NULL
+  BEGIN
+    -- Aynı belge cinsi için son kaydı al
+    UPDATE mesaj_evrak 
+    SET 
+        belge_kayit_no = COALESCE(
+            (SELECT MAX(belge_kayit_no) + 1 
+             FROM mesaj_evrak 
+             WHERE belge_cinsi = NEW.belge_cinsi
+             AND id != NEW.id),
+            1
+        ),
+        belge_gün_sira_no = CASE 
+            WHEN strftime('%Y-%m-%d', NEW.created_at) = (
+                SELECT strftime('%Y-%m-%d', created_at)
+                FROM mesaj_evrak 
+                WHERE belge_cinsi = NEW.belge_cinsi
+                AND id != NEW.id
+                ORDER BY created_at DESC 
+                LIMIT 1
+            ) THEN (
+                SELECT COALESCE(MAX(belge_gün_sira_no) + 1, 1)
+                FROM mesaj_evrak 
+                WHERE belge_cinsi = NEW.belge_cinsi
+                AND strftime('%Y-%m-%d', created_at) = strftime('%Y-%m-%d', NEW.created_at)
+                AND id != NEW.id
+            )
+            ELSE 1
+        END
+    WHERE id = NEW.id;
+  END;
+
+  -- Numara güncelleme kontrolü
+  CREATE TRIGGER IF NOT EXISTS trg_mesaj_evrak_numara_kontrol
+  BEFORE UPDATE OF belge_kayit_no, belge_gün_sira_no ON mesaj_evrak
+  BEGIN
+    SELECT CASE
+      WHEN NEW.belge_kayit_no != OLD.belge_kayit_no OR 
+           NEW.belge_gün_sira_no != OLD.belge_gün_sira_no
+      THEN RAISE(ABORT, 'Belge numaraları manuel olarak değiştirilemez')
+    END;
+  END;
 `

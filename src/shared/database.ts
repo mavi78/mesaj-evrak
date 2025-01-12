@@ -18,7 +18,9 @@ export interface GizlilikDerecesiStatements extends ReferansStatements {}
 
 export interface KlasorStatements extends ReferansStatements {}
 
-export interface KategoriStatements extends ReferansStatements {}
+export interface KategoriStatements extends ReferansStatements {
+  getByKategori: Statement
+}
 
 export interface BirlikStatements extends BaseStatements {
   getByParentId: Statement

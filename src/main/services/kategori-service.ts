@@ -45,6 +45,11 @@ export class KategoriService extends BaseService<IKategori, KategoriStatements> 
         WHERE id = ?
       `),
 
+      getByKategori: db.prepare(`
+        SELECT * FROM ${this.tableName}
+        WHERE kategori = CASE_TURKISH(?)
+      `),
+
       create: db.prepare(`
         INSERT INTO ${this.tableName} (
           id, kategori, varsayılan,

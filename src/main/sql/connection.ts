@@ -1,18 +1,41 @@
 import Database from 'better-sqlite3'
-import { join } from 'path'
 import { existsSync, mkdirSync } from 'fs'
 import * as fs from 'fs/promises'
+import { is } from '@electron-toolkit/utils'
+import * as path from 'path'
 
 let db: Database.Database | null = null
 let dbPath: string | null = null
 let isConnected = false
 
+function getDatabasePath(): string {
+  let dbDir: string
+
+  if (is.dev) {
+    // Development modunda proje dizininde oluştur
+    dbDir = path.join(process.cwd(), 'db')
+  } else {
+    // Production modunda executable'ın bulunduğu dizinde oluştur
+    dbDir = path.join(path.dirname(process.execPath), 'db')
+  }
+
+  // Dizin yoksa oluştur
+  if (!existsSync(dbDir)) {
+    mkdirSync(dbDir, { recursive: true })
+  }
+
+  return path.join(dbDir, 'database.sqlite')
+}
+
 async function logStartupError(error: Error): Promise<void> {
   try {
-    const logDir = join(process.cwd(), 'logs')
+    const logDir = is.dev
+      ? path.join(process.cwd(), 'logs')
+      : path.join(path.dirname(process.execPath), 'logs')
+
     await fs.mkdir(logDir, { recursive: true })
 
-    const logFile = join(logDir, 'startup-error.log')
+    const logFile = path.join(logDir, 'startup-error.log')
     const logEntry = `[${new Date().toISOString()}] ${error.name}: ${error.message}\n${error.stack}\n\n`
 
     await fs.appendFile(logFile, logEntry, 'utf8')
@@ -26,12 +49,7 @@ export const initDatabase = async (): Promise<void> => {
   if (db) return
 
   try {
-    const dbDir = join(process.cwd(), 'db')
-    if (!existsSync(dbDir)) {
-      mkdirSync(dbDir, { recursive: true })
-    }
-
-    dbPath = join(dbDir, 'database.sqlite')
+    dbPath = getDatabasePath()
 
     db = new Database(dbPath, {
       verbose: (message) => console.debug('SQLite Query', { query: message }),

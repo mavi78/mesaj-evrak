@@ -3,7 +3,6 @@ import { BaseService } from './base/base-service'
 import { IMesaEvrak } from '@shared/servisler/mesaj-evrak'
 import { MesajEvrakStatements, TypeConverter } from '@shared/database'
 import { v7 as uuidv7 } from 'uuid'
-import { sayacService } from './sayac-service'
 import { ValidationError, DatabaseError } from '@shared/app-error'
 
 export class MesajEvrakService extends BaseService<IMesaEvrak, MesajEvrakStatements> {
@@ -148,20 +147,16 @@ export class MesajEvrakService extends BaseService<IMesaEvrak, MesajEvrakStateme
       throw new ValidationError('Geçersiz belge cinsi')
     }
 
-    const created_at = new Date().toISOString()
-
     return this.runInTransaction(async () => {
       try {
-        const sayac = await sayacService.getBelgeNumaralari(belgeCinsi, created_at)
-
         const entity = {
           id: uuidv7(),
           ...data,
-          belge_kayit_no: sayac.kayit_no,
-          belge_gün_sira_no: sayac.gun_sira_no,
+          belge_kayit_no: null,
+          belge_gün_sira_no: null,
           computer_name: this.computerName,
           user_name: this.userName,
-          created_at
+          created_at: new Date().toISOString()
         }
 
         await this.statements!.create.run(entity)
