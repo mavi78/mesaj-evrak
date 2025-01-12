@@ -28,7 +28,9 @@ class MigrationManager {
   public init(): void {
     if (this.initialized) return
     this.db = getDatabase()
-    this.initialized = true
+
+    // Önce özel fonksiyonları tanımla
+    this.initializeCustomFunctions()
 
     // Migrations tablosunu oluştur
     this.db.exec(`
@@ -39,17 +41,65 @@ class MigrationManager {
       )
     `)
 
+    this.initialized = true
+  }
+
+  /**
+   * Özel SQLite fonksiyonlarını tanımlar
+   * @private
+   */
+  private initializeCustomFunctions(): void {
+    if (!this.db) return
+
     // CASE_TURKISH fonksiyonunu tanımla
-    this.db.function('CASE_TURKISH', (text: any) => {
-      if (!text) return text
-      return text.toLocaleUpperCase('tr-TR')
-    })
+    this.db.function(
+      'CASE_TURKISH',
+      {
+        deterministic: true,
+        varargs: false
+      },
+      (text: any) => {
+        if (!text || typeof text !== 'string') return text
+        return text.toLocaleUpperCase('tr-TR')
+      }
+    )
 
     // NOCASE_TURKISH fonksiyonunu tanımla
-    this.db.function('NOCASE_TURKISH', (text: any) => {
-      if (!text) return text
-      return text.toLocaleLowerCase('tr-TR')
-    })
+    this.db.function(
+      'NOCASE_TURKISH',
+      {
+        deterministic: true,
+        varargs: false
+      },
+      (text: any) => {
+        if (!text || typeof text !== 'string') return text
+        return text.toLocaleLowerCase('tr-TR')
+      }
+    )
+
+    // Yıl bazlı senet no fonksiyonunu tanımla
+    this.db.function(
+      'fn_get_yil_bazli_senet_no',
+      {
+        deterministic: true,
+        varargs: false
+      },
+      (yil: number) => {
+        const result = this.db!.prepare(
+          `
+        SELECT COALESCE(
+          MAX(senet_no),
+          ? * 10000
+        ) as son_senet_no
+        FROM dagitim 
+        WHERE senet_no >= ? * 10000 
+        AND senet_no < (? + 1) * 10000
+      `
+        ).get(yil, yil, yil) as { son_senet_no: number }
+
+        return result.son_senet_no
+      }
+    )
   }
 
   private getMigrations(): {

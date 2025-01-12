@@ -60,7 +60,8 @@ export class KanalService extends BaseService<IKanallar, KanalStatements> {
             updated_at = @updated_at
         WHERE id = @id
       `),
-      delete: db.prepare('DELETE FROM kanallar WHERE id = ?')
+      delete: db.prepare('DELETE FROM kanallar WHERE id = ?'),
+      getKuryeId: db.prepare("SELECT id FROM kanallar WHERE kanal = 'KURYE'")
     }
   }
 
@@ -183,6 +184,13 @@ export class KanalService extends BaseService<IKanallar, KanalStatements> {
     const kanal = await this.statements!.getById.get(id)
     if (!kanal) throw new DatabaseError('Kanal bulunamadı', 'MEDIUM')
     return this.validateEntity(kanal, this.typeConverters)
+  }
+
+  public async getKuryeId(): Promise<string> {
+    this.checkInitialized()
+    const kurye = await this.statements!.getKuryeId.get()
+    if (!kurye) throw new DatabaseError('Kurye bulunamadı', 'MEDIUM')
+    return kurye.id
   }
 }
 export const kanalService = KanalService.getInstance()

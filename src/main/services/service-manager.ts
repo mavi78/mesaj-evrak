@@ -9,6 +9,7 @@ import { ErrorService } from './error-service'
 import { BrowserWindow } from 'electron'
 import { mesajEvrakService } from './mesaj-evrak-service'
 import { kanalService } from './kanal-service'
+import { dagitimService } from './dagitim-service'
 
 export class ServiceManager {
   private static instance: ServiceManager | null = null
@@ -23,7 +24,8 @@ export class ServiceManager {
     'klasor',
     'kanal',
     'birlik', // Sonra sayaç servisi
-    'mesajEvrak' // En son mesaj_evrak tablosu
+    'mesajEvrak', // En son mesaj_evrak tablosu
+    'dagitim'
   ]
 
   private services: { [K in keyof ServiceType]: BaseServiceInstance } = {
@@ -32,7 +34,8 @@ export class ServiceManager {
     kanal: kanalService,
     kategori: kategoriService,
     birlik: birlikService,
-    mesajEvrak: mesajEvrakService
+    mesajEvrak: mesajEvrakService,
+    dagitim: dagitimService
   }
 
   private constructor() {

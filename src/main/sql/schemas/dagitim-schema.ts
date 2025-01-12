@@ -237,4 +237,70 @@ export const dagitimSchema = `
       me.belge_no,
       me.belge_konusu,
       me.belge_tarihi;
+
+  -- En son senet numaralarını gösteren view
+  CREATE VIEW IF NOT EXISTS v_son_senet_no AS
+  SELECT 
+      CAST(senet_no/10000 as INTEGER) as yil,
+      MAX(senet_no) as son_senet_no,
+      COUNT(*) as senet_adedi
+  FROM dagitim 
+  WHERE senet_no > 0
+  GROUP BY CAST(senet_no/10000 as INTEGER)
+  ORDER BY yil DESC;
+
+  -- Senet detaylarını gösteren view
+  CREATE VIEW IF NOT EXISTS v_senet_detay AS
+  SELECT 
+      d.senet_no,
+      d.teslim_tarihi,
+      COUNT(*) as evrak_sayisi,
+      GROUP_CONCAT(DISTINCT me.belge_no) as evrak_nolar,
+      GROUP_CONCAT(DISTINCT b.birlik_adi) as teslim_edilen_birlikler
+  FROM dagitim d
+  INNER JOIN mesaj_evrak me ON d.mesaj_evrak_id = me.id
+  INNER JOIN birlikler b ON d.birlik_id = b.id
+  WHERE d.senet_no > 0
+  GROUP BY d.senet_no, d.teslim_tarihi
+  ORDER BY d.senet_no DESC;
+
+  -- Kanal değişikliği trigger'ı
+  CREATE TRIGGER IF NOT EXISTS trg_kanal_degisikligi
+  AFTER UPDATE OF kanal_id ON dagitim
+  WHEN OLD.kanal_id != NEW.kanal_id
+  BEGIN
+      UPDATE dagitim 
+      SET teslim_tarihi = datetime('now'),
+          senet_no = 0,
+          teslim_durumu = 1
+      WHERE id = NEW.id;
+  END;
+
+  -- Silme kontrolü için trigger
+  CREATE TRIGGER IF NOT EXISTS trg_dagitim_silme_kontrol
+  BEFORE DELETE ON dagitim
+  BEGIN
+      SELECT CASE
+          WHEN (
+              SELECT teslim_durumu 
+              FROM dagitim 
+              WHERE id = OLD.id
+          ) = 1 
+          THEN RAISE(ABORT, 'Teslim edilmiş dağıtım silinemez')
+          
+          WHEN (
+              SELECT senet_no 
+              FROM dagitim 
+              WHERE id = OLD.id AND senet_no > 0
+          ) IS NOT NULL 
+          THEN RAISE(ABORT, 'Senet numarası verilmiş dağıtım silinemez')
+          
+          WHEN (
+              SELECT is_locked 
+              FROM dagitim 
+              WHERE id = OLD.id
+          ) = 1 
+          THEN RAISE(ABORT, 'Kilitli dağıtım silinemez')
+      END;
+  END;
 `

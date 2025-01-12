@@ -1,4 +1,4 @@
-import { BrowserWindow, dialog, app } from 'electron'
+import { BrowserWindow, dialog } from 'electron'
 import { AppError } from '../../shared/app-error'
 import { Database } from 'better-sqlite3'
 import { getDatabase } from '../sql/connection'
@@ -6,6 +6,7 @@ import * as path from 'path'
 import * as fs from 'fs/promises'
 import { v7 as uuidv7 } from 'uuid'
 import * as os from 'os'
+import { is } from '@electron-toolkit/utils'
 
 interface IErrorLog {
   id: string
@@ -31,10 +32,18 @@ export class ErrorService {
   private userName: string
 
   private constructor() {
-    // Program dizinini al
-    const appPath = path.dirname(app.getPath('exe'))
+    let appPath: string
+
+    if (is.dev) {
+      // Development modunda proje dizininde oluştur
+      appPath = path.join(process.cwd(), 'logs')
+    } else {
+      // Production modunda executable'ın bulunduğu dizinde oluştur
+      appPath = path.join(path.dirname(process.execPath), 'logs')
+    }
+
     // Program dizini altında logs klasörü
-    this.logPath = path.join(appPath, 'logs')
+    this.logPath = appPath //path.join(appPath, 'logs')
     this.computerName = os.hostname()
     this.userName = os.userInfo().username
     this.db = getDatabase()

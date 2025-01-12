@@ -9,5 +9,5 @@ export interface IDagitim extends IBaseService {
   belge_guv_knt_no: string //belge güvenlik kontrol no mesajdakiyle eğer GELEN yada TRANSİT ise mesajdakiyle aynı olacak GİDEN ise ayrı olacak kullanıcı elle girecek
   teslim_durumu: boolean //teslim durumu
   senet_no: number //senet no
-  teslim_tarihi: Date //teslim tarihi
+  teslim_tarihi: Date | null //teslim tarihi
 }

@@ -31,7 +31,9 @@ export interface SayacStatements extends BaseStatements {
   getSayacIstatistikleri: Statement
 }
 
-export interface KanalStatements extends BaseStatements {}
+export interface KanalStatements extends BaseStatements {
+  getKuryeId: Statement
+}
 
 export interface MesajEvrakStatements extends BaseStatements {
   search: Statement
@@ -44,4 +46,13 @@ export interface MesajEvrakStatements extends BaseStatements {
   getLastWeekDocuments: Statement
   getDocumentStats: Statement
   getAllWithPagination: Statement
+}
+
+export interface DagitimStatements extends BaseStatements {
+  getByMesajEvrakId: Statement
+  getByBirlikId: Statement
+  getTeslimEdilmemis: Statement
+  getSonSenetNo: Statement
+  topluSenetGuncelle: Statement
+  search: Statement
 }
