@@ -10,7 +10,6 @@ export interface BaseStatements {
   create: Statement
   update: Statement
   delete: Statement
-  [key: string]: Statement
 }
 
 export interface ReferansStatements extends BaseStatements {}
@@ -40,4 +39,5 @@ export interface MesajEvrakStatements extends BaseStatements {
   getLastDayDocuments: Statement
   getLastWeekDocuments: Statement
   getDocumentStats: Statement
+  getAllWithPagination: Statement
 }

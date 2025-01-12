@@ -50,11 +50,11 @@ export class MesajEvrakService extends BaseService<IMesaEvrak, MesajEvrakStateme
     this.statements = {
       create: db.prepare(`
         INSERT INTO ${this.tableName} (
-          id, belge_cinsi, gonderen_birlik_id, belge_no, belge_konusu, belge_tarihi,
+          id, belge_cinsi, belge_kayit_no, belge_gün_sira_no, gonderen_birlik_id, belge_no, belge_konusu, belge_tarihi,
           belge_guv_knt_no, belge_gizlilik_id, belge_kategori_id, belge_klasor_id, 
           belge_sayfa_sayisi, computer_name, user_name, created_at
         ) VALUES (
-          @id, @belge_cinsi, @gonderen_birlik_id, @belge_no, CASE_TURKISH(@belge_konusu), 
+          @id, @belge_cinsi, @belge_kayit_no, @belge_gün_sira_no, @gonderen_birlik_id, @belge_no, CASE_TURKISH(@belge_konusu), 
           CASE_TURKISH(@belge_tarihi), @belge_guv_knt_no, @belge_gizlilik_id,
           @belge_kategori_id, @belge_klasor_id, @belge_sayfa_sayisi, @computer_name, @user_name,
           @created_at
@@ -63,6 +63,8 @@ export class MesajEvrakService extends BaseService<IMesaEvrak, MesajEvrakStateme
       update: db.prepare(`
         UPDATE ${this.tableName} SET
           belge_cinsi = @belge_cinsi,
+          belge_kayit_no = @belge_kayit_no,
+          belge_gün_sira_no = @belge_gün_sira_no,
           gonderen_birlik_id = @gonderen_birlik_id,
           belge_no = @belge_no,
           belge_konusu = CASE_TURKISH(@belge_konusu),
