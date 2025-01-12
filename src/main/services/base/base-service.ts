@@ -26,9 +26,15 @@ export abstract class BaseService<T extends IBaseService, TStatements extends Ba
       this.initializeStatements(this.db)
       this.initialized = true
     } catch (error) {
+      this.initialized = false
+      this.statements = null
+      this.db = null
+
       ErrorService.getInstance().handleError(
         new DatabaseError('Veritabanı başlatma hatası', 'CRITICAL', error as Error)
       )
+
+      throw error
     }
   }
 

@@ -323,7 +323,7 @@ export const mesajEvrakSchema = `
           WHEN 'KAS' THEN '11' WHEN 'NOV' THEN '11'
           WHEN 'ARA' THEN '12' WHEN 'DEC' THEN '12'
         END || '-' || substr(belge_tarihi, 1, 2))
-    END as compare_date
+    END as normalized_belge_tarihi
   FROM mesaj_evrak;
 
   -- Oluşturulma tarihine göre belgeler view'ı
@@ -354,8 +354,8 @@ export const mesajEvrakSchema = `
     me.*,
     b.birlik_adi,
     gd.gizlilik_derecesi as gizlilik_derecesi_adi,
-    k.kategori_adi,
-    kl.klasor_adi,
+    k.kategori as kategori_adi,
+    kl.klasor as klasor_adi,
     vt.normalized_belge_tarihi,
     CASE 
       WHEN me.belge_tipi = 'MESAJ' THEN 

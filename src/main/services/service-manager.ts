@@ -16,6 +16,16 @@ export class ServiceManager {
   private db: Database | null = null
   private mainWindow: BrowserWindow | null = null
 
+  // Servislerin başlatılma sırası önemli
+  private serviceOrder: (keyof ServiceType)[] = [
+    'gizlilikDerecesi', // Önce referans tabloları
+    'kategori',
+    'klasor',
+    'birlik',
+    'sayac', // Sonra sayaç servisi
+    'mesajEvrak' // En son mesaj_evrak tablosu
+  ]
+
   private services: { [K in keyof ServiceType]: BaseServiceInstance } = {
     klasor: klasorService,
     gizlilikDerecesi: gizlilikDerecesiService,
@@ -57,10 +67,12 @@ export class ServiceManager {
       }
 
       // Servisleri sırayla başlat
-      for (const service of Object.values(this.services)) {
+      for (const serviceName of this.serviceOrder) {
+        const service = this.services[serviceName]
         try {
           await new Promise((resolve) => setTimeout(resolve, 500))
           await service.init(db)
+          console.log(`${service.serviceName} başarıyla başlatıldı`)
         } catch (err) {
           throw new AppError(
             `${service.serviceName} başlatılırken bir hata oluştu`,
@@ -72,6 +84,7 @@ export class ServiceManager {
       }
 
       this.initialized = true
+      console.log('Tüm servisler başarıyla başlatıldı')
     } catch (err) {
       this.initialized = false
       throw new AppError(

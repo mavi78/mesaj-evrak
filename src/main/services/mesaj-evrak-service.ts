@@ -110,12 +110,16 @@ export class MesajEvrakService extends BaseService<IMesaEvrak, MesajEvrakStateme
       `),
       getByDateRange: db.prepare(`
         SELECT * FROM vw_tarih_araligi_helper
-        WHERE normalized_tarih BETWEEN @startDate AND @endDate
-        ORDER BY normalized_tarih DESC
+        WHERE normalized_belge_tarihi BETWEEN @startDate AND @endDate
+        ORDER BY normalized_belge_tarihi DESC
         LIMIT @limit OFFSET @offset
       `),
       getByBelgeTarihi: db.prepare(`
-        SELECT * FROM vw_belgeler_by_belge_tarihi
+        SELECT * FROM (
+          SELECT * FROM vw_evrak_by_belge_tarihi
+          UNION ALL
+          SELECT * FROM vw_mesaj_by_belge_tarihi
+        )
         WHERE belge_tarihi = @date
         ORDER BY created_at DESC
         LIMIT @limit OFFSET @offset
