@@ -66,6 +66,7 @@ export const mesajEvrakSchema = `
     -- Mesaj/Evrak spesifik alanlar
     belge_tipi TEXT NOT NULL CHECK (belge_tipi IN ('MESAJ', 'EVRAK')),
     belge_cinsi TEXT NOT NULL CHECK (belge_cinsi IN ('GELEN', 'GİDEN', 'TRANSİT')),
+    kanal_id TEXT NOT NULL,
     gonderen_birlik_id TEXT NOT NULL,
     belge_kayit_no INTEGER NOT NULL,
     belge_gün_sira_no INTEGER NOT NULL,
@@ -79,6 +80,7 @@ export const mesajEvrakSchema = `
     belge_sayfa_sayisi INTEGER NOT NULL CHECK (belge_sayfa_sayisi > 0),
 
     -- Foreign key kısıtlamaları
+    FOREIGN KEY (kanal_id) REFERENCES kanallar(id) ON DELETE RESTRICT,
     FOREIGN KEY (gonderen_birlik_id) REFERENCES birlikler(id) ON DELETE RESTRICT,
     FOREIGN KEY (belge_gizlilik_id) REFERENCES gizlilik_dereceleri(id) ON DELETE RESTRICT,
     FOREIGN KEY (belge_kategori_id) REFERENCES kategoriler(id) ON DELETE RESTRICT,
@@ -168,6 +170,7 @@ export const mesajEvrakSchema = `
   CREATE INDEX IF NOT EXISTS idx_mesaj_evrak_gizlilik ON mesaj_evrak(belge_gizlilik_id);
   CREATE INDEX IF NOT EXISTS idx_mesaj_evrak_kategori ON mesaj_evrak(belge_kategori_id);
   CREATE INDEX IF NOT EXISTS idx_mesaj_evrak_klasor ON mesaj_evrak(belge_klasor_id);
+  CREATE INDEX IF NOT EXISTS idx_mesaj_evrak_kanal ON mesaj_evrak(kanal_id);
 
   -- Tarih dönüşüm fonksiyonu (Mesaj formatından ISO formatına)
   CREATE VIEW IF NOT EXISTS vw_mesaj_evrak_tarihler AS
@@ -353,8 +356,9 @@ export const mesajEvrakSchema = `
   SELECT 
     me.*,
     b.birlik_adi,
+    k.kanal as kanal_adi,
     gd.gizlilik_derecesi as gizlilik_derecesi_adi,
-    k.kategori as kategori_adi,
+    kt.kategori as kategori_adi,
     kl.klasor as klasor_adi,
     vt.normalized_belge_tarihi,
     CASE 
@@ -364,11 +368,12 @@ export const mesajEvrakSchema = `
         me.belge_kayit_no || '/' || me.belge_gün_sira_no || ' - ' || me.belge_no
     END as belge_tam_no
   FROM mesaj_evrak me
-  JOIN vw_mesaj_evrak_tarihler vt ON vt.id = me.id
-  JOIN birlikler b ON b.id = me.gonderen_birlik_id
-  JOIN gizlilik_dereceleri gd ON gd.id = me.belge_gizlilik_id
-  JOIN kategoriler k ON k.id = me.belge_kategori_id
-  JOIN klasorler kl ON kl.id = me.belge_klasor_id;
+  LEFT JOIN birlikler b ON me.gonderen_birlik_id = b.id
+  LEFT JOIN kanallar k ON me.kanal_id = k.id
+  LEFT JOIN gizlilik_dereceleri gd ON me.belge_gizlilik_id = gd.id
+  LEFT JOIN kategoriler kt ON me.belge_kategori_id = kt.id
+  LEFT JOIN klasorler kl ON me.belge_klasor_id = kl.id
+  LEFT JOIN vw_mesaj_evrak_tarihler vt ON me.id = vt.id;
 
   -- Otomatik numara verme trigger'ı
   CREATE TRIGGER IF NOT EXISTS trg_mesaj_evrak_numara_ver

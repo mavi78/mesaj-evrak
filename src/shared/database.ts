@@ -31,6 +31,8 @@ export interface SayacStatements extends BaseStatements {
   getSayacIstatistikleri: Statement
 }
 
+export interface KanalStatements extends BaseStatements {}
+
 export interface MesajEvrakStatements extends BaseStatements {
   search: Statement
   getTotalCount: Statement

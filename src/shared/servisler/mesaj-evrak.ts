@@ -3,6 +3,7 @@ import { IBaseService } from './base-servis'
 export interface IMesaEvrak extends IBaseService {
   belge_tipi: 'MESAJ' | 'EVRAK'
   belge_cinsi: 'GELEN' | 'GİDEN' | 'TRANSİT'
+  kanal_id: string
   gonderen_birlik_id: string
   belge_kayit_no: number
   belge_gün_sira_no: number

@@ -276,3 +276,125 @@ BEGIN
         THEN RAISE(ABORT, 'Kayıt başka bir kullanıcı tarafından kilitlenmiş')
     END;
 END;`
+
+export const kanallarSchema = `
+-- Kanallar tablosu
+CREATE TABLE IF NOT EXISTS kanallar (
+    -- Base Service Alanları
+    id TEXT PRIMARY KEY,
+    is_locked BOOLEAN NOT NULL DEFAULT 0,
+    locked_by TEXT,
+    locked_at TEXT,
+    updated_at TEXT,
+    created_at TEXT,
+    computer_name TEXT NOT NULL,
+    user_name TEXT NOT NULL,
+    
+    -- Referans Ortak Alanları
+    varsayılan BOOLEAN NOT NULL DEFAULT 0,
+    
+    -- Özel Alanlar
+    kanal TEXT NOT NULL,
+    is_system BOOLEAN NOT NULL DEFAULT 0, -- Sistem tarafından oluşturulan kayıtlar (KURYE, POSTA)
+    
+    -- Kısıtlamalar
+    CHECK (
+        (locked_by IS NOT NULL AND locked_at IS NOT NULL) OR
+        (locked_by IS NULL AND locked_at IS NULL)
+    )
+);
+
+-- İndeksler
+CREATE INDEX IF NOT EXISTS idx_kanal_varsayılan ON kanallar(varsayılan);
+CREATE INDEX IF NOT EXISTS idx_kanal_locked ON kanallar(is_locked);
+CREATE INDEX IF NOT EXISTS idx_kanal_ad ON kanallar(kanal);
+CREATE INDEX IF NOT EXISTS idx_kanal_system ON kanallar(is_system);
+CREATE INDEX IF NOT EXISTS idx_kanal_computer ON kanallar(computer_name, user_name);
+
+-- Türkçe karakter kontrolü için trigger
+CREATE TRIGGER IF NOT EXISTS trg_kanallar_unique_insert
+BEFORE INSERT ON kanallar
+BEGIN
+    SELECT CASE 
+        WHEN EXISTS (
+            SELECT 1 FROM kanallar 
+            WHERE CASE_TURKISH(kanal) = CASE_TURKISH(NEW.kanal)
+        )
+        THEN RAISE(ABORT, 'Bu kanal adı zaten mevcut')
+    END;
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_kanallar_unique_update
+BEFORE UPDATE OF kanal ON kanallar
+BEGIN
+    SELECT CASE 
+        WHEN EXISTS (
+            SELECT 1 FROM kanallar 
+            WHERE CASE_TURKISH(kanal) = CASE_TURKISH(NEW.kanal)
+            AND id != NEW.id
+        )
+        THEN RAISE(ABORT, 'Bu kanal adı zaten mevcut')
+    END;
+END;
+
+-- Sistem kayıtlarının değiştirilmesini ve silinmesini engelleyen trigger
+CREATE TRIGGER IF NOT EXISTS trg_kanallar_system_update
+BEFORE UPDATE ON kanallar
+WHEN OLD.is_system = 1
+BEGIN
+    SELECT CASE 
+        WHEN NEW.kanal != OLD.kanal OR NEW.is_system != OLD.is_system
+        THEN RAISE(ABORT, 'Sistem tarafından oluşturulan kanallar değiştirilemez')
+    END;
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_kanallar_system_delete
+BEFORE DELETE ON kanallar
+WHEN OLD.is_system = 1
+BEGIN
+    SELECT RAISE(ABORT, 'Sistem tarafından oluşturulan kanallar silinemez');
+END;
+
+-- Kanallar için Varsayılan Kontrol Trigger'ları
+CREATE TRIGGER IF NOT EXISTS trg_kanallar_varsayılan_insert
+AFTER INSERT ON kanallar
+BEGIN
+    UPDATE kanallar 
+    SET varsayılan = 0 
+    WHERE id != NEW.id AND varsayılan = 1 AND NEW.varsayılan = 1;
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_kanallar_varsayılan_update
+AFTER UPDATE OF varsayılan ON kanallar
+WHEN NEW.varsayılan = 1 AND OLD.varsayılan = 0
+BEGIN
+    UPDATE kanallar 
+    SET varsayılan = 0 
+    WHERE id != NEW.id AND varsayılan = 1;
+END;
+
+-- Kilit Kontrol
+CREATE TRIGGER IF NOT EXISTS trg_kanallar_kilit_kontrol
+BEFORE UPDATE ON kanallar
+FOR EACH ROW
+WHEN NEW.is_locked = 0 AND OLD.is_locked = 1
+BEGIN
+    SELECT CASE 
+        WHEN OLD.locked_by != NEW.locked_by AND
+             datetime(OLD.locked_at, '+5 minutes') > datetime('now')
+        THEN RAISE(ABORT, 'Kayıt başka bir kullanıcı tarafından kilitlenmiş ve kilit süresi dolmamış')
+    END;
+END;
+
+-- Otomatik Kilit Açma Trigger
+CREATE TRIGGER IF NOT EXISTS trg_kanallar_kilit_kontrol_sure
+BEFORE UPDATE ON kanallar
+FOR EACH ROW
+WHEN OLD.is_locked = 1 AND 
+     datetime(OLD.locked_at, '+5 minutes') <= datetime('now')
+BEGIN
+    SELECT CASE 
+        WHEN NEW.is_locked = 1
+        THEN RAISE(ABORT, 'Kilit süresi dolmuş, yeni kilit için önce kilidi kaldırın')
+    END;
+END;`

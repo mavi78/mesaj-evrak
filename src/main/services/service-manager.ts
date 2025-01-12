@@ -8,6 +8,7 @@ import { birlikService } from './birlik-service'
 import { ErrorService } from './error-service'
 import { BrowserWindow } from 'electron'
 import { mesajEvrakService } from './mesaj-evrak-service'
+import { kanalService } from './kanal-service'
 
 export class ServiceManager {
   private static instance: ServiceManager | null = null
@@ -20,6 +21,7 @@ export class ServiceManager {
     'gizlilikDerecesi', // Önce referans tabloları
     'kategori',
     'klasor',
+    'kanal',
     'birlik', // Sonra sayaç servisi
     'mesajEvrak' // En son mesaj_evrak tablosu
   ]
@@ -27,6 +29,7 @@ export class ServiceManager {
   private services: { [K in keyof ServiceType]: BaseServiceInstance } = {
     klasor: klasorService,
     gizlilikDerecesi: gizlilikDerecesiService,
+    kanal: kanalService,
     kategori: kategoriService,
     birlik: birlikService,
     mesajEvrak: mesajEvrakService

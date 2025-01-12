@@ -16,3 +16,8 @@ export interface IKlasor extends IBaseService, IReferanslar {
 export interface IKategori extends IBaseService, IReferanslar {
   kategori: string
 }
+
+export interface IKanallar extends IBaseService, IReferanslar {
+  kanal: string // KURYE ve POSTA ilk kayıtlar olacak bunlar silinemez ve değiştirilemez sonra diğer kanallar eklenir
+  is_system: boolean
+}
