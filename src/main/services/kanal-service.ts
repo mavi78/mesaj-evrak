@@ -67,7 +67,7 @@ export class KanalService extends BaseService<IKanallar, KanalStatements> {
   /**
    * Servis başlatıldığında çalışır ve gerekli tabloları oluşturur
    */
-  async initialize(): Promise<void> {
+  public async initialize(): Promise<void> {
     this.checkInitialized()
 
     // Şemayı oluştur

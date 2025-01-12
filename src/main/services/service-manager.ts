@@ -84,6 +84,7 @@ export class ServiceManager {
       }
 
       this.initialized = true
+      kanalService.initialize()
       console.log('Tüm servisler başarıyla başlatıldı')
     } catch (err) {
       this.initialized = false

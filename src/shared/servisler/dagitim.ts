@@ -1,6 +1,6 @@
 import { IBaseService } from './base-servis'
 
-export interface Dagitim extends IBaseService {
+export interface IDagitim extends IBaseService {
   birlik_id: string //seçilen birlik id
   ust_birlik_id: string //seçilen birlik ust birlik id
   dagitim_tarihi: Date //dagitim tarihi

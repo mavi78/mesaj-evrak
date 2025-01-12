@@ -8,6 +8,7 @@ import {
   kanallarSchema
 } from '../schemas/referanslar-schema'
 import { birliklerSchema } from '../schemas/birlikler-schema'
+import { dagitimSchema } from '../schemas/dagitim-schema'
 
 export const MESAJ_EVRAK_SCHEMA = mesajEvrakSchema
 export const ERROR_LOGS_SCHEMA = errorLogsSchema
@@ -17,3 +18,4 @@ export const KLASORLER_SCHEMA = klasorlerSchema
 export const KATEGORILER_SCHEMA = kategorilerSchema
 export const KANALLAR_SCHEMA = kanallarSchema
 export const BIRLIKLER_SCHEMA = birliklerSchema
+export const DAGITIM_SCHEMA = dagitimSchema

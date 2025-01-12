@@ -9,7 +9,8 @@ import {
   KATEGORILER_SCHEMA,
   BIRLIKLER_SCHEMA,
   MESAJ_EVRAK_SCHEMA,
-  KANALLAR_SCHEMA
+  KANALLAR_SCHEMA,
+  DAGITIM_SCHEMA
 } from './constants'
 
 class MigrationManager {
@@ -63,7 +64,8 @@ class MigrationManager {
       { name: 'kanallar_schema', sql: KANALLAR_SCHEMA },
       { name: 'birlikler_schema', sql: BIRLIKLER_SCHEMA },
       { name: 'mesaj_evrak_schema', sql: MESAJ_EVRAK_SCHEMA },
-      { name: 'log_kayitlari_schema', sql: LOG_KAYITLARI_SCHEMA }
+      { name: 'log_kayitlari_schema', sql: LOG_KAYITLARI_SCHEMA },
+      { name: 'dagitim_schema', sql: DAGITIM_SCHEMA }
     ]
   }
 
