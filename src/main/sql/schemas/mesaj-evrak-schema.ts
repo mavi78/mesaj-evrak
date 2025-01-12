@@ -158,78 +158,6 @@ export const mesajEvrakSchema = `
 
   -- İndeksler
   CREATE INDEX IF NOT EXISTS idx_mesaj_evrak_belge_tipi ON mesaj_evrak(belge_tipi);
-
-  -- Log kayıt trigger'ları
-  CREATE TRIGGER IF NOT EXISTS trg_mesaj_evrak_insert_log
-  AFTER INSERT ON mesaj_evrak
-  BEGIN
-    INSERT INTO log_kayitlari (
-      islem_turu,
-      tablo_adi,
-      kayit_id,
-      yeni_degerler,
-      kullanici_adi,
-      bilgisayar_adi,
-      islem_tarihi
-    ) 
-    VALUES (
-      'INSERT',
-      'mesaj_evrak',
-      NEW.id,
-      json_object(
-        'belge_tipi', NEW.belge_tipi,
-        'belge_tarihi', NEW.belge_tarihi,
-        'belge_no', NEW.belge_no,
-        'belge_konusu', NEW.belge_konusu,
-        'gonderen_birlik_id', NEW.gonderen_birlik_id,
-        'belge_gizlilik_id', NEW.belge_gizlilik_id
-      ),
-      NEW.user_name,
-      NEW.computer_name,
-      datetime('now')
-    );
-  END;
-
-  CREATE TRIGGER IF NOT EXISTS trg_mesaj_evrak_update_log
-  AFTER UPDATE ON mesaj_evrak
-  BEGIN
-    INSERT INTO log_kayitlari (
-      islem_turu,
-      tablo_adi, 
-      kayit_id,
-      eski_degerler,
-      yeni_degerler,
-      kullanici_adi,
-      bilgisayar_adi,
-      islem_tarihi
-    )
-    VALUES (
-      'UPDATE',
-      'mesaj_evrak',
-      OLD.id,
-      json_object(
-        'belge_tipi', OLD.belge_tipi,
-        'belge_tarihi', OLD.belge_tarihi,
-        'belge_no', OLD.belge_no,
-        'belge_konusu', OLD.belge_konusu,
-        'gonderen_birlik_id', OLD.gonderen_birlik_id,
-        'belge_gizlilik_id', OLD.belge_gizlilik_id
-      ),
-      json_object(
-        'belge_tipi', NEW.belge_tipi,
-        'belge_tarihi', NEW.belge_tarihi,
-        'belge_no', NEW.belge_no,
-        'belge_konusu', NEW.belge_konusu,
-        'gonderen_birlik_id', NEW.gonderen_birlik_id,
-        'belge_gizlilik_id', NEW.belge_gizlilik_id
-      ),
-      NEW.user_name,
-      NEW.computer_name,
-      datetime('now')
-    );
-  END;
-
-  -- Diğer indeksler
   CREATE INDEX IF NOT EXISTS idx_mesaj_evrak_belge_cinsi ON mesaj_evrak(belge_cinsi);
   CREATE INDEX IF NOT EXISTS idx_mesaj_evrak_gonderen_birlik ON mesaj_evrak(gonderen_birlik_id);
   CREATE INDEX IF NOT EXISTS idx_mesaj_evrak_belge_tarihi ON mesaj_evrak(belge_tarihi);
@@ -240,23 +168,6 @@ export const mesajEvrakSchema = `
   CREATE INDEX IF NOT EXISTS idx_mesaj_evrak_gizlilik ON mesaj_evrak(belge_gizlilik_id);
   CREATE INDEX IF NOT EXISTS idx_mesaj_evrak_kategori ON mesaj_evrak(belge_kategori_id);
   CREATE INDEX IF NOT EXISTS idx_mesaj_evrak_klasor ON mesaj_evrak(belge_klasor_id);
-
-  -- Hata logları tablosu
-  CREATE TABLE IF NOT EXISTS error_logs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    timestamp TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-    error_type TEXT NOT NULL,
-    error_message TEXT NOT NULL,
-    error_stack TEXT,
-    source TEXT,
-    user_name TEXT,
-    computer_name TEXT,
-    additional_info TEXT
-  );
-
-  -- Hata logları için indeks
-  CREATE INDEX IF NOT EXISTS idx_error_logs_timestamp ON error_logs(timestamp);
-  CREATE INDEX IF NOT EXISTS idx_error_logs_error_type ON error_logs(error_type);
 
   -- Tarih dönüşüm fonksiyonu (Mesaj formatından ISO formatına)
   CREATE VIEW IF NOT EXISTS vw_mesaj_evrak_tarihler AS

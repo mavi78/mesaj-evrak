@@ -3,6 +3,7 @@ import { getDatabase } from '../connection'
 import { v7 as uuidv7 } from 'uuid'
 import {
   ERROR_LOG_SCHEMA,
+  LOG_KAYITLARI_SCHEMA,
   GIZLILIK_DERECELERI_SCHEMA,
   KLASORLER_SCHEMA,
   KATEGORILER_SCHEMA,
@@ -55,13 +56,14 @@ class MigrationManager {
     sql: string
   }[] {
     return [
-      { name: 'error_log_schema', sql: ERROR_LOG_SCHEMA },
+      { name: 'error_logs_schema', sql: ERROR_LOG_SCHEMA },
       { name: 'gizlilik_dereceleri_schema', sql: GIZLILIK_DERECELERI_SCHEMA },
       { name: 'klasorler_schema', sql: KLASORLER_SCHEMA },
       { name: 'kategoriler_schema', sql: KATEGORILER_SCHEMA },
       { name: 'birlikler_schema', sql: BIRLIKLER_SCHEMA },
       { name: 'sayac_schema', sql: SAYAC_SCHEMA },
-      { name: 'mesaj_evrak_schema', sql: MESAJ_EVRAK_SCHEMA }
+      { name: 'mesaj_evrak_schema', sql: MESAJ_EVRAK_SCHEMA },
+      { name: 'log_kayitlari_schema', sql: LOG_KAYITLARI_SCHEMA }
     ]
   }
 

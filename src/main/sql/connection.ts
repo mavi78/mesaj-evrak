@@ -58,6 +58,17 @@ export const initDatabase = async (): Promise<void> => {
       }
     }
 
+    // REGEXP fonksiyonu ekleniyor
+    db.function('REGEXP', (pattern: string, text: string) => {
+      if (!pattern || !text) return 0
+      try {
+        const regex = new RegExp(pattern)
+        return regex.test(text) ? 1 : 0
+      } catch (e) {
+        return 0
+      }
+    })
+
     db.function('NOCASE_TURKISH', (text: any) => {
       if (!text) return text
       return text.toLocaleLowerCase('tr-TR')
