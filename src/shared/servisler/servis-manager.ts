@@ -5,6 +5,7 @@ import { BirlikService } from 'src/main/services/birlik-service'
 import { MesajEvrakService } from 'src/main/services/mesaj-evrak-service'
 import { KanalService } from 'src/main/services/kanal-service'
 import { DagitimService } from 'src/main/services/dagitim-service'
+import { PostaService } from 'src/main/services/posta-service'
 import { Database } from 'better-sqlite3'
 
 export interface BaseServiceInstance {
@@ -21,4 +22,5 @@ export interface ServiceType {
   birlik: BirlikService
   mesajEvrak: MesajEvrakService
   dagitim: DagitimService
+  posta: PostaService
 }

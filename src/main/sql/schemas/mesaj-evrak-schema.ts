@@ -158,6 +158,20 @@ export const mesajEvrakSchema = `
     WHERE id = OLD.id;
   END;
 
+  -- Silme kontrolü için trigger
+  CREATE TRIGGER IF NOT EXISTS trg_mesaj_evrak_delete_control
+  BEFORE DELETE ON mesaj_evrak
+  FOR EACH ROW
+  BEGIN
+      SELECT CASE
+          WHEN EXISTS (
+              SELECT 1 FROM dagitim 
+              WHERE mesaj_evrak_id = OLD.id
+          ) THEN
+              RAISE(ABORT, 'Bu mesaj/evrak dağıtımda kullanıldığı için silinemez. Önce dağıtımları silmeniz gerekmektedir.')
+      END;
+  END;
+
   -- İndeksler
   CREATE INDEX IF NOT EXISTS idx_mesaj_evrak_belge_tipi ON mesaj_evrak(belge_tipi);
   CREATE INDEX IF NOT EXISTS idx_mesaj_evrak_belge_cinsi ON mesaj_evrak(belge_cinsi);

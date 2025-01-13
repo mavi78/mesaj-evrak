@@ -56,3 +56,11 @@ export interface DagitimStatements extends BaseStatements {
   topluSenetGuncelle: Statement
   search: Statement
 }
+
+export interface PostaStatements extends BaseStatements {
+  getByMesajEvrakId: Statement
+  getByBirlikId: Statement
+  updateDurum: Statement
+  updateTarih: Statement
+  updateRRKodu: Statement
+}

@@ -118,6 +118,21 @@ export const dagitimSchema = `
       END;
   END;
 
+  -- POSTA kanalı kontrolü için trigger
+  CREATE TRIGGER IF NOT EXISTS trg_dagitim_delete_control
+  BEFORE DELETE ON dagitim
+  FOR EACH ROW
+  BEGIN
+      SELECT CASE
+          WHEN EXISTS (
+              SELECT 1 FROM kanallar k
+              WHERE k.id = OLD.kanal_id 
+              AND k.kanal = 'POSTA'
+          ) THEN
+              RAISE(ABORT, 'POSTA kanalı ile dağıtılmış kayıtlar, önce posta kayıtları silinmeden silinemez.')
+      END;
+  END;
+
   -- Dağıtım view'ı
   CREATE VIEW IF NOT EXISTS vw_dagitim AS
   SELECT 

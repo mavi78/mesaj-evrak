@@ -10,6 +10,7 @@ import { BrowserWindow } from 'electron'
 import { mesajEvrakService } from './mesaj-evrak-service'
 import { kanalService } from './kanal-service'
 import { dagitimService } from './dagitim-service'
+import { postaService } from './posta-service'
 
 export class ServiceManager {
   private static instance: ServiceManager | null = null
@@ -25,7 +26,8 @@ export class ServiceManager {
     'kanal',
     'birlik', // Sonra sayaç servisi
     'mesajEvrak', // En son mesaj_evrak tablosu
-    'dagitim'
+    'dagitim',
+    'posta'
   ]
 
   private services: { [K in keyof ServiceType]: BaseServiceInstance } = {
@@ -35,7 +37,8 @@ export class ServiceManager {
     kategori: kategoriService,
     birlik: birlikService,
     mesajEvrak: mesajEvrakService,
-    dagitim: dagitimService
+    dagitim: dagitimService,
+    posta: postaService
   }
 
   private constructor() {

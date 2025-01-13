@@ -59,7 +59,7 @@ export class BirlikService extends BaseService<IBirlikler, BirlikStatements> {
           computer_name, user_name, created_at
         ) VALUES (
           @id, CASE_TURKISH(@birlik_adi), @birlik_tanitim_kodu, @birlik_tipi, @ust_birlik_id,
-          @computer_name, @user_name, @created_at
+          @computer_name, @user_name, datetime('now', 'localtime')
         )
       `),
 
@@ -71,7 +71,7 @@ export class BirlikService extends BaseService<IBirlikler, BirlikStatements> {
             ust_birlik_id = @ust_birlik_id,
             computer_name = @computer_name,
             user_name = @user_name,
-            updated_at = @updated_at
+            updated_at = datetime('now', 'localtime')
         WHERE id = @id
       `),
 
@@ -92,8 +92,7 @@ export class BirlikService extends BaseService<IBirlikler, BirlikStatements> {
       birlik_tipi: data.birlik_tipi || 'BİRLİK',
       ust_birlik_id: data.ust_birlik_id || null,
       computer_name: this.computerName,
-      user_name: this.userName,
-      created_at: new Date().toISOString()
+      user_name: this.userName
     }
 
     const result = this.runInTransaction(() => {
@@ -119,8 +118,7 @@ export class BirlikService extends BaseService<IBirlikler, BirlikStatements> {
       birlik_tipi: data.birlik_tipi || current.birlik_tipi,
       ust_birlik_id: data.ust_birlik_id !== undefined ? data.ust_birlik_id : current.ust_birlik_id,
       computer_name: this.computerName,
-      user_name: this.userName,
-      updated_at: new Date().toISOString()
+      user_name: this.userName
     }
 
     const result = this.runInTransaction(() => {

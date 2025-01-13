@@ -86,7 +86,7 @@ export class DagitimService extends BaseService<IDagitim, DagitimStatements> {
           dagitim_tarihi, mesaj_evrak_id, kanal_id,
           belge_guv_knt_no, teslim_durumu, senet_no, teslim_tarihi
         ) VALUES (
-          @id, @is_locked, @locked_by, @locked_at, @created_at,
+          @id, @is_locked, @locked_by, @locked_at, datetime('now', 'localtime'),
           @computer_name, @user_name, @birlik_id, @ust_birlik_id,
           @dagitim_tarihi, @mesaj_evrak_id, @kanal_id,
           @belge_guv_knt_no, @teslim_durumu, @senet_no, @teslim_tarihi
@@ -98,7 +98,7 @@ export class DagitimService extends BaseService<IDagitim, DagitimStatements> {
           is_locked = @is_locked,
           locked_by = @locked_by,
           locked_at = @locked_at,
-          updated_at = @updated_at,
+          updated_at = datetime('now', 'localtime'),
           computer_name = @computer_name,
           user_name = @user_name,
           birlik_id = @birlik_id,
@@ -143,9 +143,9 @@ export class DagitimService extends BaseService<IDagitim, DagitimStatements> {
       topluSenetGuncelle: this.db.prepare(`
         UPDATE dagitim
         SET senet_no = @senet_no,
-            teslim_tarihi = @teslim_tarihi,
+            teslim_tarihi = datetime('now', 'localtime'),
             teslim_durumu = 1,
-            updated_at = @updated_at
+            updated_at = datetime('now', 'localtime')
         WHERE id IN (SELECT value FROM json_each(@dagitim_ids))
       `),
 
@@ -182,13 +182,10 @@ export class DagitimService extends BaseService<IDagitim, DagitimStatements> {
     const yil = new Date().getFullYear()
     const sonSenetNo = await this.getEnYuksekSenetNo(yil)
     const yeniSenetNo = sonSenetNo + 1
-    const teslimTarihi = new Date().toISOString()
 
     await this.runInTransaction(async () => {
       this.statements!.topluSenetGuncelle.run({
         senet_no: yeniSenetNo,
-        teslim_tarihi: teslimTarihi,
-        updated_at: teslimTarihi,
         dagitim_ids: JSON.stringify(dagitimIds)
       })
     })
@@ -223,7 +220,6 @@ export class DagitimService extends BaseService<IDagitim, DagitimStatements> {
       ...dagitim,
       id: uuidv7(),
       kanal_id: kurye,
-      created_at: new Date(),
       computer_name: this.computerName,
       user_name: this.userName
     }
@@ -241,7 +237,6 @@ export class DagitimService extends BaseService<IDagitim, DagitimStatements> {
    */
   async update(dagitim: IDagitim): Promise<void> {
     this.checkInitialized()
-    dagitim.updated_at = new Date()
     dagitim.computer_name = this.computerName
     dagitim.user_name = this.userName
 
