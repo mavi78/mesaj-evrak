@@ -1,16 +1,16 @@
 import { Database } from 'better-sqlite3'
 import { BaseService } from './base/base-service'
-import { IMesaEvrak } from '@shared/servisler/mesaj-evrak'
+import { IMesajEvrak } from '@shared/servisler/mesaj-evrak'
 import { MesajEvrakStatements, TypeConverter } from '@shared/database'
 import { v7 as uuidv7 } from 'uuid'
 import { ValidationError, DatabaseError } from '@shared/app-error'
 
-export class MesajEvrakService extends BaseService<IMesaEvrak, MesajEvrakStatements> {
+export class MesajEvrakService extends BaseService<IMesajEvrak, MesajEvrakStatements> {
   private static instance: MesajEvrakService
   public serviceName = 'MesajEvrakService'
   protected tableName = 'mesaj_evrak'
 
-  private typeConverters: TypeConverter<IMesaEvrak> = {
+  private typeConverters: TypeConverter<IMesajEvrak> = {
     id: (v) => String(v),
     is_locked: (v) => Boolean(v),
     locked_by: (v) => String(v),
@@ -137,7 +137,7 @@ export class MesajEvrakService extends BaseService<IMesaEvrak, MesajEvrakStateme
     }
   }
 
-  public async create(data: Partial<IMesaEvrak>): Promise<IMesaEvrak> {
+  public async create(data: Partial<IMesajEvrak>): Promise<IMesajEvrak> {
     this.checkInitialized()
 
     if (!data.belge_cinsi) {
@@ -174,7 +174,7 @@ export class MesajEvrakService extends BaseService<IMesaEvrak, MesajEvrakStateme
     })
   }
 
-  public async update(id: string, data: Partial<IMesaEvrak>): Promise<IMesaEvrak> {
+  public async update(id: string, data: Partial<IMesajEvrak>): Promise<IMesajEvrak> {
     this.checkInitialized()
 
     const current = await this.getById(id)
@@ -206,7 +206,7 @@ export class MesajEvrakService extends BaseService<IMesaEvrak, MesajEvrakStateme
     })
   }
 
-  public async getById(id: string): Promise<IMesaEvrak | null> {
+  public async getById(id: string): Promise<IMesajEvrak | null> {
     this.checkInitialized()
     const result = await this.statements!.getById.get(id)
     if (!result) return null
@@ -216,7 +216,7 @@ export class MesajEvrakService extends BaseService<IMesaEvrak, MesajEvrakStateme
   public async getAllWithPagination(
     page: number = 1,
     pageSize: number = 10
-  ): Promise<IMesaEvrak[]> {
+  ): Promise<IMesajEvrak[]> {
     this.checkInitialized()
     const offset = (page - 1) * pageSize
     const result = this.statements!.getAllWithPagination.all({ limit: pageSize, offset })
@@ -234,7 +234,7 @@ export class MesajEvrakService extends BaseService<IMesaEvrak, MesajEvrakStateme
     keyword: string,
     page: number = 1,
     pageSize: number = 10
-  ): Promise<IMesaEvrak[]> {
+  ): Promise<IMesajEvrak[]> {
     this.checkInitialized()
     const offset = (page - 1) * pageSize
     const result = this.statements!.search.all({
@@ -257,7 +257,7 @@ export class MesajEvrakService extends BaseService<IMesaEvrak, MesajEvrakStateme
     endDate: Date,
     page: number = 1,
     pageSize: number = 10
-  ): Promise<IMesaEvrak[]> {
+  ): Promise<IMesajEvrak[]> {
     this.checkInitialized()
     const offset = (page - 1) * pageSize
     const result = this.statements!.getByDateRange.all({
@@ -273,7 +273,7 @@ export class MesajEvrakService extends BaseService<IMesaEvrak, MesajEvrakStateme
     date: Date,
     page: number = 1,
     pageSize: number = 10
-  ): Promise<IMesaEvrak[]> {
+  ): Promise<IMesajEvrak[]> {
     this.checkInitialized()
     const offset = (page - 1) * pageSize
     const result = this.statements!.getByBelgeTarihi.all({
@@ -289,7 +289,7 @@ export class MesajEvrakService extends BaseService<IMesaEvrak, MesajEvrakStateme
     endDate: Date,
     page: number = 1,
     pageSize: number = 10
-  ): Promise<IMesaEvrak[]> {
+  ): Promise<IMesajEvrak[]> {
     this.checkInitialized()
     const offset = (page - 1) * pageSize
     const result = this.statements!.getByCreatedAt.all({
@@ -301,13 +301,13 @@ export class MesajEvrakService extends BaseService<IMesaEvrak, MesajEvrakStateme
     return result.map((item) => this.validateEntity(item, this.typeConverters))
   }
 
-  public async getLastDayDocuments(): Promise<IMesaEvrak[]> {
+  public async getLastDayDocuments(): Promise<IMesajEvrak[]> {
     this.checkInitialized()
     const result = this.statements!.getLastDayDocuments.all()
     return result.map((item) => this.validateEntity(item, this.typeConverters))
   }
 
-  public async getLastWeekDocuments(): Promise<IMesaEvrak[]> {
+  public async getLastWeekDocuments(): Promise<IMesajEvrak[]> {
     this.checkInitialized()
     const result = this.statements!.getLastWeekDocuments.all()
     return result.map((item) => this.validateEntity(item, this.typeConverters))

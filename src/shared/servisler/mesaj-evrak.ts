@@ -1,6 +1,6 @@
 import { IBaseService } from './base-servis'
 
-export interface IMesaEvrak extends IBaseService {
+export interface IMesajEvrak extends IBaseService {
   belge_tipi: 'MESAJ' | 'EVRAK'
   belge_cinsi: 'GELEN' | 'GİDEN' | 'TRANSİT'
   kanal_id: string

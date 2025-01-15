@@ -162,62 +162,97 @@ export class DagitimService extends BaseService<IDagitim, DagitimStatements> {
     }
   }
 
-  /**
-   * Verilen yıl için en yüksek senet numarasını getirir
-   * @param yil - Senet numarası için yıl
-   * @returns Yıl bazlı son senet numarası
-   */
-  async getEnYuksekSenetNo(yil: number): Promise<number> {
+  // Public CRUD metodları
+  public async getAllPublic(): Promise<IDagitim[]> {
     this.checkInitialized()
-    const result = this.statements!.getSonSenetNo.get({ yil })
+    const result = await this.statements!.getAll.all()
+    return result.map((item) => this.validateEntity(item, this.typeConverters))
+  }
+
+  public async getByIdPublic(id: string): Promise<IDagitim | null> {
+    this.checkInitialized()
+    const result = await this.statements!.getById.get(id)
+    if (!result) return null
+    return this.validateEntity(result, this.typeConverters)
+  }
+
+  public async delete(id: string): Promise<void> {
+    this.checkInitialized()
+    await this.runInTransaction(async () => {
+      const result = await this.statements!.delete.run({ id })
+      if (result.changes === 0) {
+        throw new Error('Kayıt silinemedi')
+      }
+    })
+  }
+
+  // Özel sorgular
+  public async getByMesajEvrakId(mesajEvrakId: string): Promise<IDagitim[]> {
+    this.checkInitialized()
+    const result = await this.statements!.getByMesajEvrakId.all({ mesaj_evrak_id: mesajEvrakId })
+    return result.map((item) => this.validateEntity(item, this.typeConverters))
+  }
+
+  public async getByBirlikId(birlikId: string): Promise<IDagitim[]> {
+    this.checkInitialized()
+    const result = await this.statements!.getByBirlikId.all({ birlik_id: birlikId })
+    return result.map((item) => this.validateEntity(item, this.typeConverters))
+  }
+
+  public async getTeslimEdilmemis(): Promise<IDagitim[]> {
+    this.checkInitialized()
+    const result = await this.statements!.getTeslimEdilmemis.all()
+    return result.map((item) => this.validateEntity(item, this.typeConverters))
+  }
+
+  public async search(query: string, limit: number = 10, offset: number = 0): Promise<IDagitim[]> {
+    this.checkInitialized()
+    const result = await this.statements!.search.all({ query: `%${query}%`, limit, offset })
+    return result.map((item) => this.validateEntity(item, this.typeConverters))
+  }
+
+  // Mevcut metodlar
+  public async getEnYuksekSenetNo(yil: number): Promise<number> {
+    this.checkInitialized()
+    const result = await this.statements!.getSonSenetNo.get({ yil })
     return result?.son_senet_no || yil * 10000
   }
 
-  /**
-   * Seçilen dağıtımlar için toplu senet oluşturur
-   * @param dagitimIds - Senet oluşturulacak dağıtım ID'leri
-   */
-  async topluSenetOlustur(dagitimIds: string[]): Promise<void> {
+  public async topluSenetOlustur(dagitimIds: string[]): Promise<void> {
     this.checkInitialized()
     const yil = new Date().getFullYear()
     const sonSenetNo = await this.getEnYuksekSenetNo(yil)
     const yeniSenetNo = sonSenetNo + 1
 
     await this.runInTransaction(async () => {
-      this.statements!.topluSenetGuncelle.run({
+      await this.statements!.topluSenetGuncelle.run({
         senet_no: yeniSenetNo,
         dagitim_ids: JSON.stringify(dagitimIds)
       })
     })
   }
 
-  /**
-   * Dağıtımın kanal bilgisini günceller
-   * @param dagitimId - Güncellenecek dağıtım ID'si
-   * @param yeniKanalId - Yeni kanal ID'si
-   */
-  async kanalGuncelle(dagitimId: string, yeniKanalId: string): Promise<void> {
+  public async kanalGuncelle(dagitimId: string, yeniKanalId: string): Promise<void> {
     this.checkInitialized()
-    const dagitim = await this.getById(dagitimId)
+    const dagitim = await this.getByIdPublic(dagitimId)
     if (!dagitim) throw new Error('Dağıtım bulunamadı')
 
-    dagitim.kanal_id = yeniKanalId
-    dagitim.updated_at = new Date()
-
     await this.runInTransaction(async () => {
-      this.statements!.update.run(dagitim)
+      await this.statements!.update.run({
+        ...dagitim,
+        kanal_id: yeniKanalId,
+        updated_at: new Date(),
+        computer_name: this.computerName,
+        user_name: this.userName
+      })
     })
   }
 
-  /**
-   * Yeni bir dağıtım oluşturur
-   * @param dagitim - Oluşturulacak dağıtım bilgileri
-   */
-  async create(dagitim: Omit<IDagitim, 'id'>): Promise<IDagitim> {
+  public async create(data: Omit<IDagitim, 'id'>): Promise<IDagitim> {
     this.checkInitialized()
     const kurye = await kanalService.getKuryeId()
-    const yeniDagitim: IDagitim = {
-      ...dagitim,
+    const entity = {
+      ...data,
       id: uuidv7(),
       kanal_id: kurye,
       computer_name: this.computerName,
@@ -225,39 +260,29 @@ export class DagitimService extends BaseService<IDagitim, DagitimStatements> {
     }
 
     await this.runInTransaction(async () => {
-      await this.statements!.create.run(yeniDagitim)
+      await this.statements!.create.run(entity)
     })
 
-    return yeniDagitim
+    const created = await this.getByIdPublic(entity.id)
+    if (!created) throw new Error('Kayıt oluşturulamadı')
+    return created
   }
 
-  /**
-   * Dağıtım bilgilerini günceller
-   * @param dagitim - Güncellenecek dağıtım bilgileri
-   */
-  async update(dagitim: IDagitim): Promise<void> {
+  public async update(dagitim: IDagitim): Promise<IDagitim> {
     this.checkInitialized()
-    dagitim.computer_name = this.computerName
-    dagitim.user_name = this.userName
+    const entity = {
+      ...dagitim,
+      computer_name: this.computerName,
+      user_name: this.userName
+    }
 
     await this.runInTransaction(async () => {
-      await this.statements!.update.run(dagitim)
+      await this.statements!.update.run(entity)
     })
-  }
 
-  /**
-   * Dağıtımı siler
-   * @param id - Silinecek dağıtım ID'si
-   * @throws {Error} Teslim edilmiş, senet numarası verilmiş veya kilitli dağıtımlar silinemez
-   */
-  async sil(id: string): Promise<void> {
-    this.checkInitialized()
-    await this.runInTransaction(async () => {
-      const result = await this.statements!.delete.run({ id })
-      if (result.changes === 0) {
-        throw new Error('Dağıtım bulunamadı veya silinemez durumda')
-      }
-    })
+    const updated = await this.getByIdPublic(entity.id)
+    if (!updated) throw new Error('Kayıt güncellenemedi')
+    return updated
   }
 }
 

@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -7,6 +7,7 @@ import { migrationManager } from './sql/migrations'
 import database from './sql/connection'
 import * as fs from 'fs/promises'
 import * as path from 'path'
+import { IpcManager } from './ipc-handlers/ipc-manager'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -38,19 +39,35 @@ async function logStartupError(error: Error): Promise<void> {
 async function initializeApp(): Promise<boolean> {
   try {
     // Veritabanını başlat
-    database.init()
+    mainWindow?.webContents.send('app:onLoadingMessage', 'Veritabanı başlatılıyor...')
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    await database.init()
     console.log('Veritabanı başlatıldı')
 
     // Migration'ları çalıştır
+    mainWindow?.webContents.send('app:onLoadingMessage', 'Migration işlemleri başlatılıyor...')
+    await new Promise((resolve) => setTimeout(resolve, 1000))
     migrationManager.init()
     await migrationManager.runMigrations()
     console.log('Migration işlemleri tamamlandı')
 
     // Servisleri başlat
+    mainWindow?.webContents.send('app:onLoadingMessage', 'Servisler başlatılıyor...')
+    await new Promise((resolve) => setTimeout(resolve, 1000))
     const manager = await serviceManager
     await manager.init(database.get())
     console.log('Servisler başlatıldı')
 
+    // IPC handler'ları başlat
+    mainWindow?.webContents.send('app:onLoadingMessage', "IPC handler'ları başlatılıyor...")
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const ipcManager = IpcManager.getInstance()
+    await ipcManager.register()
+    console.log("IPC handler'ları başlatıldı")
+
+    // Uygulama
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    mainWindow?.webContents.send('app:onLoadingMessage', 'Uygulama açılıyor...')
     console.log('Uygulama başarıyla başlatıldı')
     return true
   } catch (error) {
@@ -89,13 +106,13 @@ function createWindow(): void {
     }
   })
 
+  mainWindow.on('ready-to-show', () => {
+    mainWindow?.show()
+  })
+
   // ServiceManager'a main window'u ilet
   serviceManager.then((manager) => {
     manager.setMainWindow(mainWindow!)
-  })
-
-  mainWindow.on('ready-to-show', () => {
-    mainWindow?.show()
   })
 
   mainWindow.on('closed', () => {
@@ -114,6 +131,8 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+  mainWindow.maximize()
 }
 
 // This method will be called when Electron has finished
@@ -130,22 +149,32 @@ app.whenReady().then(async () => {
 
     // Default open or close DevTools by F12 in development
     // and ignore CommandOrControl + R in production.
-    // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
     app.on('browser-window-created', (_, window) => {
       optimizer.watchWindowShortcuts(window)
     })
 
-    // IPC test
-    ipcMain.on('ping', () => console.log('pong'))
+    // Önce pencereyi aç
+    createWindow()
 
-    // Uygulamayı başlat
+    // Pencere hazır olana kadar bekle
+    await new Promise<void>((resolve) => {
+      const checkWindow = setInterval(() => {
+        if (mainWindow?.webContents) {
+          clearInterval(checkWindow)
+          resolve()
+        }
+      }, 4000)
+    })
+
+    // Sonra uygulamayı başlat
     const initialized = await initializeApp()
     if (!initialized) {
       app.quit()
       return
     }
 
-    createWindow()
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    mainWindow?.webContents.send('app:onLoadingComplete')
 
     app.on('activate', function () {
       // On macOS it's common to re-create a window in the app when the

@@ -99,6 +99,19 @@ BEGIN
         WHEN NEW.is_locked = 1
         THEN RAISE(ABORT, 'Kilit süresi dolmuş, yeni kilit için önce kilidi kaldırın')
     END;
+END;
+
+-- Silme Kontrolü
+CREATE TRIGGER IF NOT EXISTS trg_gizlilik_dereceleri_delete_control
+BEFORE DELETE ON gizlilik_dereceleri
+BEGIN
+    SELECT CASE 
+        WHEN EXISTS (
+            SELECT 1 FROM mesaj_evrak 
+            WHERE belge_gizlilik_id = OLD.id
+        )
+        THEN RAISE(ABORT, 'Bu gizlilik derecesi mesaj/evraklarda kullanıldığı için silinemez')
+    END;
 END;`
 
 export const klasorlerSchema = `
@@ -187,6 +200,19 @@ BEGIN
         WHEN OLD.locked_by != NEW.locked_by 
         THEN RAISE(ABORT, 'Kayıt başka bir kullanıcı tarafından kilitlenmiş')
     END;
+END;
+
+-- Silme Kontrolü
+CREATE TRIGGER IF NOT EXISTS trg_klasorler_delete_control
+BEFORE DELETE ON klasorler
+BEGIN
+    SELECT CASE 
+        WHEN EXISTS (
+            SELECT 1 FROM mesaj_evrak 
+            WHERE belge_klasor_id = OLD.id
+        )
+        THEN RAISE(ABORT, 'Bu klasör mesaj/evraklarda kullanıldığı için silinemez')
+    END;
 END;`
 
 export const kategorilerSchema = `
@@ -274,6 +300,19 @@ BEGIN
     SELECT CASE 
         WHEN OLD.locked_by != NEW.locked_by 
         THEN RAISE(ABORT, 'Kayıt başka bir kullanıcı tarafından kilitlenmiş')
+    END;
+END;
+
+-- Silme Kontrolü
+CREATE TRIGGER IF NOT EXISTS trg_kategoriler_delete_control
+BEFORE DELETE ON kategoriler
+BEGIN
+    SELECT CASE 
+        WHEN EXISTS (
+            SELECT 1 FROM mesaj_evrak 
+            WHERE belge_kategori_id = OLD.id
+        )
+        THEN RAISE(ABORT, 'Bu kategori mesaj/evraklarda kullanıldığı için silinemez')
     END;
 END;`
 
@@ -396,5 +435,23 @@ BEGIN
     SELECT CASE 
         WHEN NEW.is_locked = 1
         THEN RAISE(ABORT, 'Kilit süresi dolmuş, yeni kilit için önce kilidi kaldırın')
+    END;
+END;
+
+-- Silme Kontrolü
+CREATE TRIGGER IF NOT EXISTS trg_kanallar_delete_control
+BEFORE DELETE ON kanallar
+BEGIN
+    SELECT CASE 
+        WHEN EXISTS (
+            SELECT 1 FROM mesaj_evrak 
+            WHERE kanal_id = OLD.id
+        )
+        THEN RAISE(ABORT, 'Bu kanal mesaj/evraklarda kullanıldığı için silinemez')
+        WHEN EXISTS (
+            SELECT 1 FROM dagitim
+            WHERE kanal_id = OLD.id
+        )
+        THEN RAISE(ABORT, 'Bu kanal dağıtımlarda kullanıldığı için silinemez')
     END;
 END;`

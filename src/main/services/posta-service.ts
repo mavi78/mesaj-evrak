@@ -247,6 +247,17 @@ export class PostaService extends BaseService<IPosta, PostaStatements> {
       return false
     }
   }
+
+  public async delete(id: string): Promise<void> {
+    this.checkInitialized()
+
+    await this.runInTransaction(async () => {
+      const result = await this.statements!.delete.run({ id })
+      if (result.changes === 0) {
+        throw new Error('Kayıt silinemedi')
+      }
+    })
+  }
 }
 
 export const postaService = PostaService.getInstance()

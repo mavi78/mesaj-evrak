@@ -136,6 +136,16 @@ export class KlasorService extends BaseService<IKlasor, KlasorStatements> {
 
     return result.map((item) => this.validateEntity(item, this.typeConverters))
   }
+
+  public async delete(id: string): Promise<void> {
+    this.checkInitialized()
+    await this.runInTransaction(async () => {
+      const result = await this.statements!.delete.run(id)
+      if (result.changes === 0) {
+        throw new Error('Kayıt silinemedi')
+      }
+    })
+  }
 }
 
 export const klasorService = KlasorService.getInstance()

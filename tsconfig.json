@@ -10,6 +10,7 @@
       "@/*": [
         "./src/*"
       ],
-    }
+    },
+    "typeRoots": ["./src/shared/*.d.ts"]
   }
 }
