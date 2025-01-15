@@ -9,7 +9,7 @@ import { PostaService } from 'src/main/services/posta-service'
 import { Database } from 'better-sqlite3'
 
 export interface BaseServiceInstance {
-  init(db: Database): void
+  init(db: Database): Promise<void>
   cleanup(): void
   serviceName: string
 }

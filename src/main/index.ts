@@ -1,7 +1,6 @@
 import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import icon from '../../resources/icon.png?asset'
 import { serviceManager } from './services/service-manager'
 import { migrationManager } from './sql/migrations'
 import database from './sql/connection'
@@ -38,6 +37,8 @@ async function logStartupError(error: Error): Promise<void> {
 
 async function initializeApp(): Promise<boolean> {
   try {
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+
     // Veritabanını başlat
     mainWindow?.webContents.send('app:onLoadingMessage', 'Veritabanı başlatılıyor...')
     await new Promise((resolve) => setTimeout(resolve, 1000))
@@ -99,7 +100,7 @@ function createWindow(): void {
     height: 670,
     show: false,
     autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
+    icon: join(__dirname, '../../resources/icon.png'),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
@@ -157,13 +158,19 @@ app.whenReady().then(async () => {
     createWindow()
 
     // Pencere hazır olana kadar bekle
-    await new Promise<void>((resolve) => {
-      const checkWindow = setInterval(() => {
+    await new Promise<void>((resolve, reject) => {
+      const pencereKontrol = setInterval(() => {
         if (mainWindow?.webContents) {
-          clearInterval(checkWindow)
+          clearInterval(pencereKontrol)
           resolve()
         }
-      }, 4000)
+      }, 300)
+
+      // 10 saniye sonra hala hazır değilse hata fırlat
+      setTimeout(() => {
+        clearInterval(pencereKontrol)
+        reject(new Error('Pencere 10 saniye içinde hazır olmadı'))
+      }, 10000)
     })
 
     // Sonra uygulamayı başlat

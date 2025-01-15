@@ -76,7 +76,6 @@ export class ServiceManager {
       for (const serviceName of this.serviceOrder) {
         const service = this.services[serviceName]
         try {
-          await new Promise((resolve) => setTimeout(resolve, 500))
           await service.init(db)
           console.log(`${service.serviceName} başarıyla başlatıldı`)
         } catch (err) {

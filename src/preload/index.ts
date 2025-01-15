@@ -1,5 +1,4 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import { debounce } from 'lodash'
 import { AppError } from '../shared/app-error'
 import type {
   IBirlikler,

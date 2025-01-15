@@ -18,7 +18,7 @@ export abstract class BaseService<T extends IBaseService, TStatements extends Ba
 
   protected abstract initializeStatements(db: Database): void
 
-  public init(): void {
+  public async init(): Promise<void> {
     if (this.initialized) return
 
     try {
