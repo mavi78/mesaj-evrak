@@ -6,3 +6,4 @@ out
 db
 logs
 pnpm-lock.yaml
+package-lock.json
